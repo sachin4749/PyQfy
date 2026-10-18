@@ -9,11 +9,11 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 import html
 import io
+import requests
 
 # 1. Page Configuration
 st.set_page_config(
     page_title="PyQfy - Smart PYQ & Academic Intelligence Hub",
-    page_icon="📚", # Standard favicon or text can be kept if needed, but keeping configuration minimal
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -370,7 +370,7 @@ elif nav_choice == "AI Assistant":
                 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Section 3: Feedback Form
+# Section 3: Feedback Form (Integrated with Formspree)
 elif nav_choice == "Feedback":
     st.markdown("<h1 class='main-title'>Send Your Feedback</h1>", unsafe_allow_html=True)
     st.markdown("<p class='subtitle'>Help us enhance PyQfy by sharing your valuable feedback and suggestions.</p>", unsafe_allow_html=True)
@@ -381,9 +381,26 @@ elif nav_choice == "Feedback":
         email = st.text_input("Your Email Address", placeholder="sachin@example.com")
         msg = st.text_area("Feedback / Suggestions", placeholder="Write your thoughts or feature requests here...", height=120)
         submitted = st.form_submit_button("Submit Feedback", use_container_width=True)
+        
         if submitted:
             if name and email and msg:
-                st.success("Thank you! Your feedback has been recorded successfully.")
+                # Replace with your actual Formspree endpoint URL
+                formspree_url = "https://formspree.io/f/mdeajldr"
+                
+                payload = {
+                    "name": name,
+                    "email": email,
+                    "message": msg
+                }
+                
+                try:
+                    res = requests.post(formspree_url, data=payload)
+                    if res.status_code == 200:
+                        st.success("Thank you! Your feedback has been sent successfully.")
+                    else:
+                        st.error("Failed to send feedback. Please verify your Formspree URL.")
+                except Exception as ex:
+                    st.error(f"An error occurred: {str(ex)}")
             else:
                 st.warning("Please fill in all the required fields before submitting.")
     st.markdown("</div>", unsafe_allow_html=True)
