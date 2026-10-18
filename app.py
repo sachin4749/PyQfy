@@ -288,10 +288,10 @@ if nav_choice == "Paper Analyzer":
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        uploaded_file = st.file_uploader("📁 Upload Question Paper (PDF or TXT)", type=["pdf", "txt"])
-        pasted_text = st.text_area("✍️ Or paste question text directly here:", height=140, placeholder="Paste your questions or exam paper content here...")
+        uploaded_file = st.file_uploader("Upload Question Paper (PDF or TXT)", type=["pdf", "txt"])
+        pasted_text = st.text_area("Or paste question text directly here:", height=140, placeholder="Paste your questions or exam paper content here...")
         
-        analyze_btn = st.button("✨ Analyze All Questions Deeply", type="primary", use_container_width=True)
+        analyze_btn = st.button("Analyze All Questions Deeply", type="primary", use_container_width=True)
         
         if analyze_btn:
             paper_content = ""
@@ -308,7 +308,7 @@ if nav_choice == "Paper Analyzer":
                 paper_content = pasted_text.strip()
                 
             if not paper_content:
-                st.error("⚠️ Please upload a valid file or paste your question text first!")
+                st.error(" Please upload a valid file or paste your question text first!")
             else:
                 with st.spinner("🤖 PyQfy AI Professor is breaking down every question into deep model answers... Please wait."):
                     full_query = f"Level: {selected_level}, Stream: {selected_stream}, Subject: {selected_subject}\n\nQuestions:\n{paper_content}"
