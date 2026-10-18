@@ -3,7 +3,8 @@ import os
 import google.generativeai as genai
 from pypdf import PdfReader
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 import io
 
 # Page Configuration
@@ -68,7 +69,7 @@ st.sidebar.markdown("<p style='color: #9ca3af; font-size: 0.8rem;'>Smart PYQ & A
 
 nav_choice = st.sidebar.radio("Navigation", ["Paper Analyzer", "AI Assistant", "Feedback"])
 
-# Helper function to call Gemini AI with deep academic prompt (Using gemini-3.8-flash)
+# Helper function to call Gemini AI with deep academic prompt
 def ask_gemini(prompt_text):
     try:
         model = genai.GenerativeModel('gemini-3.8-flash')
@@ -92,6 +93,46 @@ Input Content:
     except Exception as e:
         return f"Error communicating with Gemini AI: {str(e)}"
 
+# Function to generate a formatted multi-page PDF report using ReportLab
+def create_pdf_report(analysis_text):
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'ReportTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=styles['colors'].HexColor('#1e3a8a') if hasattr(styles, 'colors') else None,
+        spaceAfter=15
+    )
+    
+    body_style = ParagraphStyle(
+        'ReportBody',
+        parent=styles['Normal'],
+        fontSize=10,
+        leading=14,
+        spaceAfter=8
+    )
+    
+    story = []
+    story.append(Paragraph("<b>PyQfy - Deep Model Solutions Report</b>", title_style))
+    story.append(Spacer(1, 10))
+    
+    # Split text by lines/paragraphs and add to Story
+    paragraphs = analysis_text.split('\n')
+    for para in paragraphs:
+        if para.strip():
+            # Clean markdown bold/italics markers if necessary or let ReportLab handle basic text
+            formatted_para = para.replace('**', '<b>').replace('</b>', '<b>') # basic cleanup
+            story.append(Paragraph(formatted_para, body_style))
+        else:
+            story.append(Spacer(1, 6))
+            
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
 # 1. Paper Analyzer Section
 if nav_choice == "Paper Analyzer":
     st.markdown("<h1 class='main-title'>Question Paper Deep Analyzer</h1>", unsafe_allow_html=True)
@@ -101,11 +142,25 @@ if nav_choice == "Paper Analyzer":
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         with col1:
-            level = st.selectbox("1. Level / Degree", ["Undergraduate", "Postgraduate", "Senior Secondary"])
+            level = st.selectbox("1. Level / Degree", [
+                "10th Standard", "11th Standard", "12th Standard", 
+                "BA (Bachelor of Arts)", "B.Tech (Bachelor of Technology)", 
+                "M.Tech (Master of Technology)", "BCA (Bachelor of Computer Applications)", 
+                "MCA (Master of Computer Applications)", "MBA (Master of Business Administration)", 
+                "General Undergraduate", "General Postgraduate"
+            ])
         with col2:
-            stream = st.selectbox("2. Stream / Branch", ["Computer Science", "Electronics", "General Science"])
+            stream = st.selectbox("2. Stream / Branch", [
+                "Computer Science & Engineering", "Electronics & Communication", 
+                "Information Technology", "Mechanical Engineering", 
+                "Civil Engineering", "General Science / Arts", "Commerce & Management"
+            ])
         with col3:
-            subject = st.selectbox("3. Subject", ["Data Structures", "Operating Systems", "Physics", "Biology", "Mathematics"])
+            subject = st.selectbox("3. Subject", [
+                "Data Structures & Algorithms", "Operating Systems", "Database Management Systems",
+                "Computer Networks", "Software Engineering", "Physics", "Mathematics", 
+                "Biology / Life Sciences", "Economics", "Business Management"
+            ])
         
         uploaded_file = st.file_uploader("Upload Question Paper (PDF or TXT)", type=["pdf", "txt"])
         pasted_text = st.text_area("Or paste question paper text here directly:", height=150)
@@ -131,28 +186,25 @@ if nav_choice == "Paper Analyzer":
                     full_query = f"Level: {level}, Stream: {stream}, Subject: {subject}\n\nQuestions:\n{paper_content}"
                     ai_result = ask_gemini(full_query)
                     
+                    # Store in session state for local caching/persistence
                     st.session_state['last_analysis'] = ai_result
-                    st.success("Analysis Complete!")
-                    st.markdown("### Deep Model Solutions:")
-                    st.markdown(ai_result)
+                    st.success("Analysis Complete & Cached Locally!")
         
+        # Display cached analysis if available in session state
         if 'last_analysis' in st.session_state:
             st.markdown("---")
-            if st.button("Download PDF Report"):
-                buffer = io.BytesIO()
-                p = canvas.Canvas(buffer, pagesize=letter)
-                p.setFont("Helvetica-Bold", 16)
-                p.drawString(50, 750, "PyQfy - Deep Model Solutions Report")
-                
-                text_object = p.beginText(50, 720)
-                text_object.setFont("Helvetica", 10)
-                for line in st.session_state['last_analysis'].split('\n'):
-                    text_object.textLine(line[:95])
-                p.drawText(text_object)
-                p.showPage()
-                p.save()
-                buffer.seek(0)
-                st.download_button("📥 Click here to download PDF", buffer, file_name="PyQfy_Deep_Solutions_Report.pdf", mime="application/pdf")
+            st.markdown("### 📝 Deep Model Solutions (Cached in Session):")
+            st.markdown(st.session_state['last_analysis'])
+            
+            st.markdown("---")
+            # PDF Generation button with full formatted report
+            pdf_buffer = create_pdf_report(st.session_state['last_analysis'])
+            st.download_button(
+                label="📥 Download Complete Formatted PDF Report",
+                data=pdf_buffer,
+                file_name="PyQfy_Complete_Model_Solutions.pdf",
+                mime="application/pdf"
+            )
         
         st.markdown("</div>", unsafe_allow_html=True)
 
