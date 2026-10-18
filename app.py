@@ -246,4 +246,4 @@ elif nav_choice == "Feedback":
 
 # Footer
 st.sidebar.markdown("---")
-st.sidebar.markdown("Designed by **SK Graphics®** | Developer: **sachin4749**")
+st.sidebar.markdown("Designed by **SK Graphics®** | Developer: **Sachin K**")
