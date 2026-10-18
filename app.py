@@ -68,10 +68,10 @@ st.sidebar.markdown("<p style='color: #9ca3af; font-size: 0.8rem;'>Smart PYQ & A
 
 nav_choice = st.sidebar.radio("Navigation", ["Paper Analyzer", "AI Assistant", "Feedback"])
 
-# Helper function to call Gemini AI with deep academic prompt
+# Helper function to call Gemini AI with deep academic prompt (Using gemini-3.8-flash)
 def ask_gemini(prompt_text):
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3.8-flash')
         enhanced_prompt = f"""You are PyQfy's Elite Academic AI Professor and Expert Evaluator. 
 Your core objective is to provide exceptionally deep, accurate, rigorous, and exhaustive model answers for academic questions and question papers.
 
